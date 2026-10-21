@@ -1,0 +1,37 @@
+{
+  "plugin_id": "com.kimposoft.im.next",
+  "name": {
+    "zh_CN": "KimpoChat",
+    "en_US": "KimpoChat"
+  },
+  "version": "1.0.1",
+  "sdk_version": "1.1.0-tp.20",
+  "kimpo_version": ">=1.0.0",
+  "category": "im",
+  "author": { "name": "KimpoSoft Team" },
+  "description": {
+    "zh_CN": "在 Kimpo 中直接沟通协作：支持单聊、群聊与部门群，消息可引用回复、撤回、转发，并可发送图片、文件和视频。",
+    "en_US": "Chat and collaborate inside Kimpo: one-to-one, group and department chats, with quoted replies, recall, forwarding, and image, file and video messages."
+  },
+  "entry": { "frontend": "frontend/plugin.umd.js" },
+  "i18n": { "namespace": "com.kimposoft.im.next", "locales": ["zh-CN", "en-US"], "path": "frontend/locales", "default_locale": "zh-CN" },
+  "trust_level": "trusted",
+  "dependencies": { "platform": ">=1.0.0", "plugins": [] },
+  "permissions": { "network": [], "storage": true, "exec": false },
+  "lifecycle": { "allow_multiple_config_instances": false, "max_config_instances": 1 },
+  "capabilities": {
+    "frontend": {
+      "global_name": "KimpoPlugins.imNext",
+      "bundle": "frontend/plugin.umd.js",
+      "surfaces": [{
+        "type": "im-panel",
+        "priority": 1,
+        "host_caps": ["i18n", "log", "message", "navigation", "ws", "im", "org", "unread-notify", "desktop-app", "edit-session", "ui.confirm", "ui.prompt"]
+      }],
+      "routes": []
+    }
+  },
+  "schema_compatibility": {
+    "frontend.surface": { "min_version": 1 }
+  }
+}

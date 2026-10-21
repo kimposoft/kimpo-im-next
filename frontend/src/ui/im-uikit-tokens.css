@@ -1,0 +1,136 @@
+/*
+ * IM 界面 token 壳（2026-08-10 Figma《Kimpo-UI设计》即时通讯改版，node 1045:61090 系）。
+ * 颜色一律消费宿主主题透传变量（docs/design/teyvat-ui-spec.md 第九节契约）：
+ * 宿主变量存的是空格分隔 RGB 三元组，必须写 rgb(var(--x, 回退三元组)) 消费；
+ * 独立预览（脱离宿主）时回退到宿主设计系统亮色值。宿主切暗色 = html.dark，
+ * 三元组变量自动翻转；仅本插件特有的装饰性字面值（内容区/搜索底/气泡底/阴影）
+ * 需要在下方 html.dark 块里按规范第八节自带暗色推导值。
+ * 变量仍作用于 .im-uikit-theme 类作用域（不挂 :root），防止 UMD 污染宿主。
+ */
+.im-uikit-theme {
+  font-family: var(--im-uikit-font-family);
+
+  --im-uikit-font-family: Roboto, 'Source Han Sans SC', -apple-system, 'PingFang SC',
+    'Microsoft YaHei', sans-serif;
+  --im-uikit-font-size-xs: 10px;
+  --im-uikit-font-size-sm: 12px;
+  --im-uikit-font-size-md: 14px;
+  --im-uikit-font-size-lg: 16px;
+  --im-uikit-line-height-sm: 18px;
+  --im-uikit-line-height-md: 20px;
+  --im-uikit-line-height-composer: 22px;
+
+  /* —— 语义色：全部来自宿主透传三元组 —— */
+  --im-uikit-brand: rgb(var(--primary-color, 8 119 244));
+  --im-uikit-error: rgb(var(--error-color, 232 79 79));
+  --im-uikit-text-primary: rgb(var(--base-text-color, 31 31 31));
+  --im-uikit-text-secondary: rgb(var(--text-secondary-color, 102 102 102));
+  --im-uikit-text-tertiary: rgb(var(--text-hint-color, 153 153 153));
+  --im-uikit-text-link: var(--im-uikit-brand);
+  --im-uikit-text-link-accessible: rgb(var(--primary-700-color, 7 85 209));
+  --im-uikit-text-disabled: rgb(var(--base-text-color, 31 31 31) / 0.25);
+  --im-uikit-text-on-primary: #fff;
+  --im-uikit-text-error: var(--im-uikit-error);
+  --im-uikit-border-lighter: rgb(var(--border-lighter-color, 235 238 245));
+  --im-uikit-border-default: rgb(var(--border-color, 220 223 230));
+  --im-uikit-border-deep: rgb(var(--border-deep-color, 205 208 214));
+  --im-uikit-presence-online: rgb(var(--success-color, 103 194 58));
+  --im-uikit-presence-offline: rgb(var(--text-hint-color, 153 153 153));
+  /* 成功/警示语义色：转发结果成功态、警示浅底的取色源，随宿主三元组在暗色下自动翻转 */
+  --im-uikit-success: rgb(var(--success-color, 103 194 58));
+  --im-uikit-warning: rgb(var(--warning-color, 250 173 20));
+
+  /* —— 面板底色 —— */
+  --im-uikit-bg-shell: rgb(var(--container-bg-color, 255 255 255));
+  --im-uikit-bg-operate: rgb(var(--container-bg-color, 255 255 255));
+  --im-uikit-bg-dropdown: rgb(var(--container-bg-color, 255 255 255));
+  --im-uikit-bg-list-default: transparent;
+  --im-uikit-bg-list-hover: rgb(var(--base-text-color, 31 31 31) / 0.05);
+  --im-uikit-bg-list-focused: rgb(var(--primary-color, 8 119 244) / 0.05);
+  --im-uikit-bg-dropdown-hover: rgb(var(--primary-color, 8 119 244) / 0.08);
+  --im-uikit-bg-dropdown-active: rgb(var(--primary-color, 8 119 244) / 0.12);
+  --im-uikit-bg-danger-hover: rgb(var(--error-color, 232 79 79) / 0.08);
+  --im-uikit-bg-input: var(--im-uikit-bg-field);
+  /* 品牌浅底：入群提示条、部门规则条（透明度叠加，暗色下随宿主主色自动翻转） */
+  --im-uikit-bg-brand-soft: rgb(var(--primary-color, 8 119 244) / 0.08);
+  /* 警示浅底：搜索命中高亮 mark、消息定位高亮环 */
+  --im-uikit-bg-warning-soft: rgb(var(--warning-color, 250 173 20) / 0.18);
+
+  /* 插件特有装饰性字面值（宿主设计系统色板没有的 IM 专用灰阶，暗色见下方推导块） */
+  --im-uikit-bg-surface: #f5f5f5;
+  /* 顶部标题栏底色（Figma 即时通讯-消息页原值） */
+  --im-uikit-bg-titlebar: rgba(230, 246, 255, 0.5);
+  /* Windows 形态窗口按钮悬停 / 按下底（对齐 Windows 11 标题按钮） */
+  --im-uikit-bg-caption-hover: rgba(0, 0, 0, 0.06);
+  --im-uikit-bg-caption-pressed: rgba(0, 0, 0, 0.04);
+  --im-uikit-bg-field: #ebebeb;
+  --im-uikit-bg-bubble: #fff;
+  --im-uikit-bg-bubble-peer: var(--im-uikit-bg-bubble);
+  --im-uikit-bg-bubble-own: var(--im-uikit-bg-bubble);
+  /* 卡片/弹窗浮层实底：通知卡片、预览弹窗、转发弹窗、@提及浮层 */
+  --im-uikit-bg-card: #fff;
+  /* 次级填充：预览内容区、转发结果块 */
+  --im-uikit-bg-muted: #f7f8fa;
+  /* 图片气泡加载占位底 */
+  --im-uikit-bg-image-placeholder: #eef1f5;
+  --im-uikit-shadow-window: 0 0 24px rgba(0, 0, 0, 0.2);
+  --im-uikit-shadow-popup: -1px 2px 13px rgba(0, 0, 0, 0.1);
+  --im-uikit-shadow-menu: var(--im-uikit-shadow-popup);
+  --im-uikit-shadow-message-menu: var(--im-uikit-shadow-popup);
+
+  /* —— 几何（Figma 定版值） —— */
+  --im-uikit-avatar-xs: 24px;
+  --im-uikit-avatar-sm: 32px;
+  --im-uikit-avatar-md: 36px;
+  --im-uikit-avatar-rail: 40px;
+  --im-uikit-chat-header-height: 61px;
+  /* 会话行高：按参考应用（微信 Mac）实测 64（头像 36 + 上下各 14），此前 72。
+     尺寸基准以实测为准、Figma 稿不同步——见 floating-shell.static.test.ts 里的两套权威分工说明。 */
+  --im-uikit-conversation-row-height: 64px;
+  --im-uikit-icon-button-sm: 24px;
+  --im-uikit-icon-button-md: 28px;
+  --im-uikit-switch-width: 38px;
+  --im-uikit-switch-height: 20px;
+  --im-uikit-switch-thumb: 16px;
+
+  /* 圆角对齐宿主设计系统：小4 中8 大16 超大24 */
+  --im-uikit-radius-xs: 4px;
+  --im-uikit-radius-sm: 6px;
+  --im-uikit-radius-md: 8px;
+  --im-uikit-radius-lg: 12px;
+  --im-uikit-radius-dialog: 16px;
+  --im-uikit-radius-window: 24px;
+  --im-uikit-radius-pill: 999px;
+
+  --im-uikit-menu-conversation-width: 160px;
+  --im-uikit-menu-message-width: 120px;
+  --im-uikit-menu-attachment-width: 160px;
+  --im-uikit-menu-item-height: 36px;
+  --im-uikit-transition-color: 0.3s ease-out;
+  --im-uikit-transition-interaction: 0.2s ease;
+  --im-uikit-focus-ring: 0 0 0 2px rgb(var(--primary-color, 8 119 244) / 0.28);
+}
+
+/*
+ * 暗色推导（规范第八节）：仅覆盖上面「插件特有装饰性字面值」，
+ * 其余颜色随宿主三元组在 html.dark 下自动翻转，无需重复声明。
+ * 灰阶按浮层填充档位在容器底 #1C1C1C 上预合成为实色。
+ */
+html.dark .im-uikit-theme {
+  --im-uikit-bg-surface: #242424;
+  /* 标题栏：品牌浅蓝在容器底 #1C1C1C 上的暗色推导（预合成实色） */
+  --im-uikit-bg-titlebar: #1b2129;
+  --im-uikit-bg-caption-hover: rgba(255, 255, 255, 0.08);
+  --im-uikit-bg-caption-pressed: rgba(255, 255, 255, 0.05);
+  /* 输入框比气泡亮一档：两者原本同为 #2f2f2f，暗色下输入框与气泡失去层级差 */
+  --im-uikit-bg-field: #3a3a3a;
+  --im-uikit-bg-bubble: #2f2f2f;
+  /* 卡片/次级填充/图片占位的暗色推导（容器底 #1C1C1C 上预合成） */
+  --im-uikit-bg-card: #2f2f2f;
+  --im-uikit-bg-muted: #1f1f1f;
+  --im-uikit-bg-image-placeholder: #333;
+  --im-uikit-shadow-window: 0 0 24px rgba(0, 0, 0, 0.6);
+  --im-uikit-shadow-popup: -1px 2px 13px rgba(0, 0, 0, 0.5);
+  /* 注：--im-uikit-text-on-primary 不在此重复声明——与亮色块同值（#fff），
+     主色底上的前景两态一致，重复声明属冗余。 */
+}
