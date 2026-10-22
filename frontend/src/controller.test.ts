@@ -991,6 +991,60 @@ describe('formal SDK controller orchestration', () => {
     stop();
   });
 
+  // 新通知到达（notify.push）/ 撤回（notify.revoke）后，系统通知会话时间按最新一条通知的
+  // created_at 重算（与宿主初始投影同口径，没有通知时为空串），不再只刷新未读数而停在打开面板那一刻。
+  it('refreshes the system conversation time from the latest notification on notify.push / notify.revoke', async () => {
+    const harness = createDemoHarness();
+    const originalList = harness.host.im!.conversations.list.bind(harness.host.im!.conversations);
+    harness.host.im!.conversations.list = async request => {
+      const page = await originalList(request);
+      return { ...page, items: [{
+        id: '__system__', kind: 'system-notification' as const, displayName: 'Notifications', memberCount: 1,
+        lastSeq: 0, readSeq: 0, deliveredSeq: 0, mentionSeq: 0, unreadCount: 0, hasMention: false,
+        muted: false, pinned: true, hidden: false, readonly: true, currentMemberRole: null, currentMemberSource: null, updatedAt: '2027-01-01T00:00:00Z'
+      }, ...page.items] };
+    };
+    let latest: { id: string; createdAt: string } | undefined = { id: 'n1', createdAt: '2027-01-01T00:00:00Z' };
+    let unread = 0;
+    harness.host.im!.notifications.list = async request => ({
+      items: latest ? [{ id: latest.id, type: 'todo', title: 'Approval', content: 'Please review', readAt: null, createdAt: latest.createdAt }] : [],
+      total: latest ? 1 : 0, offset: request?.offset ?? 0, limit: request?.limit ?? 50
+    });
+    harness.host.im!.notifications.unreadCount = async () => unread;
+
+    const controller = useImController(harness.host);
+    await controller.refresh();
+    const system = () => controller.snapshot.value.conversations.find(item => item.kind === 'system')!;
+    const stop = controller.startRealtime();
+
+    // ① 系统通知会话未打开：只拉未读数 + 最新一条，同时刷新未读与时间。
+    await controller.selectConversation('c-team');
+    expect(controller.activeConversation.value?.kind).not.toBe('system');
+    latest = { id: 'n2', createdAt: '2027-01-02T08:30:00Z' };
+    unread = 1;
+    harness.emit('notify.push', { id: 'n2', unreadTotal: 1 });
+    await flush();
+    expect(system().unread).toBe(1);
+    expect(system().updatedAt).toBe('2027-01-02T08:30:00Z');
+
+    // ② 撤回到一条都不剩：时间回到空串（与宿主初始投影「无通知不给时间」一致）。
+    latest = undefined;
+    unread = 0;
+    harness.emit('notify.revoke', { sourceRef: 'todo-2', unreadTotal: 0 });
+    await flush();
+    expect(system().unread).toBe(0);
+    expect(system().updatedAt).toBe('');
+
+    // ③ 系统通知会话正打开：重载首页时同样按第一条刷新时间。
+    await controller.selectConversation('__system__');
+    latest = { id: 'n3', createdAt: '2027-01-03T01:00:00Z' };
+    harness.emit('notify.push', { id: 'n3', unreadTotal: 1 });
+    await flush();
+    expect(system().updatedAt).toBe('2027-01-03T01:00:00Z');
+    stop();
+    controller.dispose();
+  });
+
   it('converges real WS read/revoke/card/member events and unregisters every subscription', async () => {
     const harness = createDemoHarness();
     const controller = useImController(harness.host);

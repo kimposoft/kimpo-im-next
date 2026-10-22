@@ -921,7 +921,20 @@ export function useImController(host: ImNextHostBridge | undefined, options?: Im
     notificationOffset = offset + page.items.length;
     notificationTotal = page.total;
     const conversation = snapshot.value.conversations.find(item => item.id === conversationId);
-    if (conversation) conversation.unread = unreadCount;
+    if (conversation) {
+      conversation.unread = unreadCount;
+      // 首页（offset 0）的第一条就是最新通知：顺带刷新会话时间。
+      if (offset === 0) syncSystemConversationTime(conversation, page.items[0]?.createdAt);
+    }
+  }
+
+  /**
+   * 系统通知会话的时间 = 最新一条通知的 created_at，没有通知时为空串——与宿主初始投影
+   * 同一口径。新通知到达 / 撤回后都按它重算，
+   * 否则会话列表时间停在打开面板那一刻，排序也不会随新通知前移。
+   */
+  function syncSystemConversationTime(conversation: Conversation, latestCreatedAt: string | undefined): void {
+    conversation.updatedAt = latestCreatedAt ?? '';
   }
 
   async function markVisibleNotificationsRead(): Promise<void> {
@@ -1933,8 +1946,14 @@ export function useImController(host: ImNextHostBridge | undefined, options?: Im
     if (!conversation) return;
     if (activeId.value === conversation.id) await loadNotifications(conversation.id, true);
     else {
-      const count = await caps.im.notifications.unreadCount();
-      if (isLifecycleCurrent(generation)) conversation.unread = count;
+      // 未打开系统通知会话时只拉未读数 + 最新一条（limit 1），同时刷新未读与会话时间。
+      const [count, latest] = await Promise.all([
+        caps.im.notifications.unreadCount(),
+        caps.im.notifications.list({ offset: 0, limit: 1 })
+      ]);
+      if (!isLifecycleCurrent(generation)) return;
+      conversation.unread = count;
+      syncSystemConversationTime(conversation, latest.items[0]?.createdAt);
     }
   }
 
